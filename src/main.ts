@@ -122,9 +122,24 @@ function bindEventHandlers(): void {
   });
 
   // Voice Mode Start Button
-  startVoiceBtn.addEventListener('click', () => {
-    state.voice.enabled = true;
-    startSession();
+  startVoiceBtn.addEventListener('click', async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert('Microphone access APIs are not supported in this browser. Please try a different browser like Chrome or Safari.');
+      return;
+    }
+
+    try {
+      // Proactively request microphone access to ensure Voice Mode will work
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Release microphone stream immediately until gameplay starts
+      stream.getTracks().forEach(track => track.stop());
+
+      state.voice.enabled = true;
+      startSession();
+    } catch (err) {
+      console.warn('Microphone access denied or unavailable:', err);
+      alert('Microphone access is required for Voice Mode. Please ensure a microphone is connected and permission is granted in your browser settings.');
+    }
   });
 
   // Live Answer character validator
