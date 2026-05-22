@@ -279,6 +279,11 @@ function startSession(): void {
   gamePanel.style.display = 'flex';
   headerHud.style.display = 'flex';
   document.body.classList.add('game-active');
+  if (state.voice.enabled) {
+    document.body.classList.add('voice-mode-active');
+  } else {
+    document.body.classList.remove('voice-mode-active');
+  }
 
   // Clear HUD values
   timerVal.textContent = state.game.timeLeft.toString();
@@ -291,7 +296,9 @@ function startSession(): void {
   answerInput.value = '';
   
   // Refocus input
-  setTimeout(() => answerInput.focus(), 50);
+  if (!state.voice.enabled) {
+    setTimeout(() => answerInput.focus(), 50);
+  }
 
   // Toggle speech engines if enabled
   if (state.voice.enabled) {
@@ -389,7 +396,9 @@ function handleCorrectAnswer(): void {
   problemText.textContent = nextQ.text;
   
   // Keep keypads focused
-  answerInput.focus();
+  if (!state.voice.enabled) {
+    answerInput.focus();
+  }
 }
 
 /**
@@ -409,7 +418,7 @@ function terminateSession(): void {
   gamePanel.style.display = 'none';
   resultsPanel.style.display = 'flex';
   headerHud.style.display = 'none';
-  document.body.classList.remove('game-active');
+  document.body.classList.remove('game-active', 'voice-mode-active');
 
   // Trigger metrics compiling and charting
   processAnalytics();

@@ -361,6 +361,20 @@ body.game-active {
   margin-top: 80px; /* Move the active equation lower for a perfectly balanced layout */
 }
 
+/* Voice Mode Centering & Hiding Overrides */
+body.voice-mode-active .equals-sign,
+body.voice-mode-active .input-wrapper {
+  display: none !important;
+}
+
+body.voice-mode-active .problem-container {
+  grid-template-columns: 1fr;
+}
+
+body.voice-mode-active .problem-text {
+  text-align: center;
+}
+
 .problem-text {
   font-size: 32px;
   font-weight: 700;
