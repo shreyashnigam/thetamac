@@ -3,11 +3,14 @@
    ========================================================================== */
 
 import './style.css';
+import { inject } from '@vercel/analytics';
 import { state, resetGameState } from './state';
 import { generateQuestion } from './engine';
 import { initVoiceMode, isVoiceModeSupported, startListening, stopListening, updateVoiceUI } from './voice';
 import { processAnalytics } from './analytics';
 import type { Operation } from './types';
+
+inject({ framework: 'vite' });
 
 // Centralize element selectors to prevent repeated DOM queries
 let settingsPanel: HTMLElement;
