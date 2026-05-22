@@ -5,7 +5,7 @@
 import './style.css';
 import { state, resetGameState } from './state';
 import { generateQuestion } from './engine';
-import { initVoiceMode, startListening, stopListening, updateVoiceUI } from './voice';
+import { initVoiceMode, isVoiceModeSupported, startListening, stopListening, updateVoiceUI } from './voice';
 import { processAnalytics } from './analytics';
 import type { Operation } from './types';
 
@@ -122,24 +122,14 @@ function bindEventHandlers(): void {
   });
 
   // Voice Mode Start Button
-  startVoiceBtn.addEventListener('click', async () => {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      alert('Microphone access APIs are not supported in this browser. Please try a different browser like Chrome or Safari.');
+  startVoiceBtn.addEventListener('click', () => {
+    if (!isVoiceModeSupported()) {
+      alert('Speech recognition is not supported in this browser. Please try a different browser like Chrome.');
       return;
     }
 
-    try {
-      // Proactively request microphone access to ensure Voice Mode will work
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      // Release microphone stream immediately until gameplay starts
-      stream.getTracks().forEach(track => track.stop());
-
-      state.voice.enabled = true;
-      startSession();
-    } catch (err) {
-      console.warn('Microphone access denied or unavailable:', err);
-      alert('Microphone access is required for Voice Mode. Please ensure a microphone is connected and permission is granted in your browser settings.');
-    }
+    state.voice.enabled = true;
+    startSession();
   });
 
   // Live Answer character validator
@@ -238,6 +228,29 @@ function updateRangeBlocksState(): void {
   }
 }
 
+function getNumberInput(id: string): HTMLInputElement {
+  return document.getElementById(id) as HTMLInputElement;
+}
+
+function readBoundedInt(input: HTMLInputElement): number {
+  const parsedValue = input.valueAsNumber;
+  const defaultValue = parseInt(input.defaultValue, 10);
+  const minValue = parseInt(input.min, 10);
+  const maxValue = parseInt(input.max, 10);
+
+  let value = Number.isFinite(parsedValue) ? parsedValue : defaultValue;
+
+  if (Number.isFinite(minValue)) {
+    value = Math.max(value, minValue);
+  }
+
+  if (Number.isFinite(maxValue)) {
+    value = Math.min(value, maxValue);
+  }
+
+  return Math.trunc(value);
+}
+
 /**
  * Parses settings inputs, triggers resets, and initiates timing loops.
  */
@@ -254,15 +267,24 @@ function startSession(): void {
   }
 
   // 2. Extract and validate ranges
-  const add1Min = parseInt((document.getElementById('add1-min') as HTMLInputElement).value, 10);
-  const add1Max = parseInt((document.getElementById('add1-max') as HTMLInputElement).value, 10);
-  const add2Min = parseInt((document.getElementById('add2-min') as HTMLInputElement).value, 10);
-  const add2Max = parseInt((document.getElementById('add2-max') as HTMLInputElement).value, 10);
+  const add1MinInput = getNumberInput('add1-min');
+  const add1MaxInput = getNumberInput('add1-max');
+  const add2MinInput = getNumberInput('add2-min');
+  const add2MaxInput = getNumberInput('add2-max');
+  const mul1MinInput = getNumberInput('mul1-min');
+  const mul1MaxInput = getNumberInput('mul1-max');
+  const mul2MinInput = getNumberInput('mul2-min');
+  const mul2MaxInput = getNumberInput('mul2-max');
 
-  const mul1Min = parseInt((document.getElementById('mul1-min') as HTMLInputElement).value, 10);
-  const mul1Max = parseInt((document.getElementById('mul1-max') as HTMLInputElement).value, 10);
-  const mul2Min = parseInt((document.getElementById('mul2-min') as HTMLInputElement).value, 10);
-  const mul2Max = parseInt((document.getElementById('mul2-max') as HTMLInputElement).value, 10);
+  const add1Min = readBoundedInt(add1MinInput);
+  const add1Max = readBoundedInt(add1MaxInput);
+  const add2Min = readBoundedInt(add2MinInput);
+  const add2Max = readBoundedInt(add2MaxInput);
+
+  const mul1Min = readBoundedInt(mul1MinInput);
+  const mul1Max = readBoundedInt(mul1MaxInput);
+  const mul2Min = readBoundedInt(mul2MinInput);
+  const mul2Max = readBoundedInt(mul2MaxInput);
 
   // Validate that min < max, if not swap them to save user from a crash
   state.settings.ranges.add.op1 = add1Min <= add1Max ? { min: add1Min, max: add1Max } : { min: add1Max, max: add1Min };
@@ -271,14 +293,14 @@ function startSession(): void {
   state.settings.ranges.mul.op2 = mul2Min <= mul2Max ? { min: mul2Min, max: mul2Max } : { min: mul2Max, max: mul2Min };
 
   // Write swapped back to form for consistency
-  (document.getElementById('add1-min') as HTMLInputElement).value = state.settings.ranges.add.op1.min.toString();
-  (document.getElementById('add1-max') as HTMLInputElement).value = state.settings.ranges.add.op1.max.toString();
-  (document.getElementById('add2-min') as HTMLInputElement).value = state.settings.ranges.add.op2.min.toString();
-  (document.getElementById('add2-max') as HTMLInputElement).value = state.settings.ranges.add.op2.max.toString();
-  (document.getElementById('mul1-min') as HTMLInputElement).value = state.settings.ranges.mul.op1.min.toString();
-  (document.getElementById('mul1-max') as HTMLInputElement).value = state.settings.ranges.mul.op1.max.toString();
-  (document.getElementById('mul2-min') as HTMLInputElement).value = state.settings.ranges.mul.op2.min.toString();
-  (document.getElementById('mul2-max') as HTMLInputElement).value = state.settings.ranges.mul.op2.max.toString();
+  add1MinInput.value = state.settings.ranges.add.op1.min.toString();
+  add1MaxInput.value = state.settings.ranges.add.op1.max.toString();
+  add2MinInput.value = state.settings.ranges.add.op2.min.toString();
+  add2MaxInput.value = state.settings.ranges.add.op2.max.toString();
+  mul1MinInput.value = state.settings.ranges.mul.op1.min.toString();
+  mul1MaxInput.value = state.settings.ranges.mul.op1.max.toString();
+  mul2MinInput.value = state.settings.ranges.mul.op2.min.toString();
+  mul2MaxInput.value = state.settings.ranges.mul.op2.max.toString();
 
   // 3. Fetch duration
   const durationVal = parseInt(gameDurationSelect.value, 10);
