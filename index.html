@@ -3,301 +3,224 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Thetamac — Premium Mental Math Speed Run</title>
-  <meta name="description" content="A premium, lightweight, browser-based mental math training tool. Improve your arithmetic speed with real-time analytics, mobile-friendly numeric entry, and hands-free voice mode.">
-  
-  <!-- Preconnect to Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
-  <link rel="stylesheet" href="styles.css">
+  <title>Thetamac — Arithmetic Game</title>
+  <meta name="description" content="A fast-paced speed drill to solve as many arithmetic problems as you can. Minimalist, client-side, and lightweight.">
 </head>
 <body>
   <div class="app-container">
-    <header class="app-header">
-      <div class="logo">
-        <span class="logo-accent">θ</span>
-        <span class="logo-text">thetamac</span>
+    <!-- Tiny utility control bar in the top-right corner -->
+    <header id="app-header" class="app-header">
+      <div id="header-hud" class="game-hud" style="display: none;">
+        <div class="hud-item">Time: <span id="timer-val" class="bold-stat">120</span></div>
+        <div class="hud-item">Score: <span id="score-val" class="bold-stat">0</span></div>
       </div>
       <div class="header-controls">
-        <button id="theme-toggle" class="icon-btn" aria-label="Toggle Theme" title="Toggle Light/Dark Theme">
-          <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-          <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-        </button>
-        <button id="sound-toggle" class="icon-btn" aria-label="Toggle Sound" title="Toggle Sound Beeps">
-          <svg class="sound-on-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
-          <svg class="sound-off-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="22" y1="9" x2="16" y2="15"/><line x1="16" y1="9" x2="22" y2="15"/></svg>
+        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle Theme">
+          <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+          </svg>
+          <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+          </svg>
         </button>
       </div>
     </header>
 
     <main class="main-content">
-      <!-- PANEL 1: SETTINGS / HOME SCREEN -->
-      <section id="settings-panel" class="card fade-in">
-        <div class="hero-section">
-          <h1>Sharpen Your Mental Math</h1>
-          <p class="subtitle">A premium arithmetic speed test. Solve as many problems as you can in 120 seconds.</p>
-        </div>
+      <!-- PANEL 1: SETTINGS / CLASSIC SETUP -->
+      <section id="settings-panel" class="settings-view">
+        <h1 class="game-title">Arithmetic Game</h1>
+        
+        <p class="game-intro">
+          The Arithmetic Game is a fast-paced speed drill where you solve many arithmetic problems as you can in a set amount of time.
+        </p>
 
         <form id="settings-form" class="settings-form">
-          <div class="settings-grid">
-            <!-- Game Options Group -->
-            <div class="settings-column">
-              <h2 class="section-title">Operations</h2>
-              <div class="operations-list">
-                <div class="checkbox-wrapper">
-                  <input type="checkbox" id="op-add" name="operations" value="add" checked>
-                  <label for="op-add" class="checkbox-label">
-                    <span class="custom-checkbox">+</span>
-                    Addition
-                  </label>
-                </div>
-                <div class="checkbox-wrapper">
-                  <input type="checkbox" id="op-sub" name="operations" value="sub" checked>
-                  <label for="op-sub" class="checkbox-label">
-                    <span class="custom-checkbox">−</span>
-                    Subtraction
-                  </label>
-                </div>
-                <div class="checkbox-wrapper">
-                  <input type="checkbox" id="op-mul" name="operations" value="mul" checked>
-                  <label for="op-mul" class="checkbox-label">
-                    <span class="custom-checkbox">×</span>
-                    Multiplication
-                  </label>
-                </div>
-                <div class="checkbox-wrapper">
-                  <input type="checkbox" id="op-div" name="operations" value="div" checked>
-                  <label for="op-div" class="checkbox-label">
-                    <span class="custom-checkbox">÷</span>
-                    Division
-                  </label>
-                </div>
+          <div class="form-rows">
+            <!-- Addition Row -->
+            <div class="op-row" id="block-add">
+              <div class="checkbox-line">
+                <input type="checkbox" id="op-add" name="operations" value="add" checked>
+                <label for="op-add" class="bold-label">Addition</label>
               </div>
-
-              <div class="form-group timer-group">
-                <label for="game-duration" class="input-label-primary">Game Duration</label>
-                <div class="select-wrapper">
-                  <select id="game-duration" name="duration" class="form-select">
-                    <option value="30">30 seconds</option>
-                    <option value="60">60 seconds</option>
-                    <option value="120" selected>120 seconds (Default)</option>
-                    <option value="180">180 seconds</option>
-                    <option value="300">300 seconds</option>
-                    <option value="600">600 seconds</option>
-                  </select>
-                </div>
+              <div class="op-range-container" id="range-box-add">
+                <span class="range-text">Range:</span>
+                <span class="range-group">
+                  <span class="p-char">(</span>
+                  <input type="number" id="add1-min" name="add1-min" value="2" min="1" max="999" class="input-classic">
+                  <span class="to-text">to</span>
+                  <input type="number" id="add1-max" name="add1-max" value="100" min="1" max="999" class="input-classic">
+                  <span class="p-char">)</span>
+                </span>
+                <span class="op-char">+</span>
+                <span class="range-group">
+                  <span class="p-char">(</span>
+                  <input type="number" id="add2-min" name="add2-min" value="2" min="1" max="999" class="input-classic">
+                  <span class="to-text">to</span>
+                  <input type="number" id="add2-max" name="add2-max" value="100" min="1" max="999" class="input-classic">
+                  <span class="p-char">)</span>
+                </span>
               </div>
             </div>
 
-            <!-- Number Ranges Group -->
-            <div class="settings-column">
-              <h2 class="section-title">Number Ranges</h2>
-              
-              <div class="ranges-container">
-                <!-- Addition Range -->
-                <div class="range-group-box" id="range-box-add">
-                  <span class="range-badge add">+</span>
-                  <div class="range-inputs">
-                    <div class="range-field">
-                      <label for="add-min">Min</label>
-                      <input type="number" id="add-min" name="add-min" value="2" min="2" max="999">
-                    </div>
-                    <span class="range-separator">to</span>
-                    <div class="range-field">
-                      <label for="add-max">Max</label>
-                      <input type="number" id="add-max" name="add-max" value="100" min="2" max="999">
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Subtraction Range (Inherits Addition by default) -->
-                <div class="range-group-box" id="range-box-sub">
-                  <span class="range-badge sub">−</span>
-                  <div class="range-inputs">
-                    <div class="range-field">
-                      <label for="sub-min">Min</label>
-                      <input type="number" id="sub-min" name="sub-min" value="2" min="2" max="999">
-                    </div>
-                    <span class="range-separator">to</span>
-                    <div class="range-field">
-                      <label for="sub-max">Max</label>
-                      <input type="number" id="sub-max" name="sub-max" value="100" min="2" max="999">
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Multiplication Range -->
-                <div class="range-group-box" id="range-box-mul">
-                  <span class="range-badge mul">×</span>
-                  <div class="range-inputs">
-                    <div class="range-field">
-                      <label for="mul-min">Min</label>
-                      <input type="number" id="mul-min" name="mul-min" value="2" min="2" max="99">
-                    </div>
-                    <span class="range-separator">to</span>
-                    <div class="range-field">
-                      <label for="mul-max">Max</label>
-                      <input type="number" id="mul-max" name="mul-max" value="12" min="2" max="99">
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Division Range -->
-                <div class="range-group-box" id="range-box-div">
-                  <span class="range-badge div">÷</span>
-                  <div class="range-inputs">
-                    <div class="range-field">
-                      <label for="div-min">Min</label>
-                      <input type="number" id="div-min" name="div-min" value="2" min="2" max="99">
-                    </div>
-                    <span class="range-separator">to</span>
-                    <div class="range-field">
-                      <label for="div-max">Max</label>
-                      <input type="number" id="div-max" name="div-max" value="12" min="2" max="99">
-                    </div>
-                  </div>
-                </div>
+            <!-- Subtraction Row -->
+            <div class="op-row" id="block-sub">
+              <div class="checkbox-line">
+                <input type="checkbox" id="op-sub" name="operations" value="sub" checked>
+                <label for="op-sub" class="bold-label">Subtraction</label>
               </div>
+              <p class="op-desc">Addition problems in reverse.</p>
+            </div>
+
+            <!-- Multiplication Row -->
+            <div class="op-row" id="block-mul">
+              <div class="checkbox-line">
+                <input type="checkbox" id="op-mul" name="operations" value="mul" checked>
+                <label for="op-mul" class="bold-label">Multiplication</label>
+              </div>
+              <div class="op-range-container" id="range-box-mul">
+                <span class="range-text">Range:</span>
+                <span class="range-group">
+                  <span class="p-char">(</span>
+                  <input type="number" id="mul1-min" name="mul1-min" value="2" min="1" max="99" class="input-classic">
+                  <span class="to-text">to</span>
+                  <input type="number" id="mul1-max" name="mul1-max" value="12" min="1" max="99" class="input-classic">
+                  <span class="p-char">)</span>
+                </span>
+                <span class="op-char">×</span>
+                <span class="range-group">
+                  <span class="p-char">(</span>
+                  <input type="number" id="mul2-min" name="mul2-min" value="2" min="1" max="999" class="input-classic">
+                  <span class="to-text">to</span>
+                  <input type="number" id="mul2-max" name="mul2-max" value="100" min="1" max="999" class="input-classic">
+                  <span class="p-char">)</span>
+                </span>
+              </div>
+            </div>
+
+            <!-- Division Row -->
+            <div class="op-row" id="block-div">
+              <div class="checkbox-line">
+                <input type="checkbox" id="op-div" name="operations" value="div" checked>
+                <label for="op-div" class="bold-label">Division</label>
+              </div>
+              <p class="op-desc">Multiplication problems in reverse.</p>
+            </div>
+
+            <!-- Duration Row -->
+            <div class="duration-row">
+              <label for="game-duration" class="duration-label">Duration:</label>
+              <select id="game-duration" name="duration" class="select-classic">
+                <option value="30">30 seconds</option>
+                <option value="60">60 seconds</option>
+                <option value="120" selected>120 seconds</option>
+                <option value="300">300 seconds</option>
+                <option value="600">600 seconds</option>
+              </select>
             </div>
           </div>
 
-          <!-- Voice & Play Action Area -->
-          <div class="action-footer">
-            <button type="submit" id="start-btn" class="btn btn-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6 3 20 12 6 21 6 3"/></svg>
-              Start Speed Run
-            </button>
+          <!-- Bottom controls -->
+          <div class="form-actions" style="gap: 12px;">
+            <button type="submit" id="start-btn" class="btn-classic">Start</button>
+            <button type="button" id="start-voice-btn" class="btn-classic">Voice Mode</button>
           </div>
         </form>
       </section>
 
       <!-- PANEL 2: GAMEPLAY ACTIVE -->
-      <section id="game-panel" class="card fade-in" style="display: none;">
-        <!-- Top Stats Bar -->
-        <div class="game-header">
-          <div class="timer-display">
-            <span class="timer-label">Time Remaining</span>
-            <span id="timer-val" class="timer-seconds">120</span>
-          </div>
-          <div class="score-display">
-            <span class="score-label">Score</span>
-            <span id="score-val" class="score-number">0</span>
-          </div>
-        </div>
-
-        <!-- Problem Area -->
-        <div class="problem-wrapper">
+      <section id="game-panel" class="game-view" style="display: none;">
+        <!-- Problem Area (Single row inline) -->
+        <div class="problem-container">
           <div id="problem-text" class="problem-text">45 + 84</div>
-          <div class="input-container">
+          <span class="equals-sign">=</span>
+          <div class="input-wrapper">
             <input 
               type="text" 
               id="answer-input" 
-              class="answer-input" 
+              class="answer-input-classic" 
               inputmode="numeric" 
               pattern="[0-9]*" 
               autocomplete="off" 
               autocorrect="off" 
               autocapitalize="off" 
               spellcheck="false"
-              placeholder="?" 
               autofocus
             >
           </div>
         </div>
 
-        <!-- Voice Mode Inline Control -->
-        <div class="voice-game-bar">
-          <button id="voice-toggle-btn" class="btn-voice-toggle" type="button" aria-pressed="false">
-            <div class="mic-icon-wrapper">
-              <svg class="mic-default" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-              <span class="mic-wave" style="display: none;"></span>
-            </div>
-            <span id="voice-status-text">Enable Voice Mode</span>
+        <!-- Ultra-Minimalist Voice Dictation Bar -->
+        <div class="voice-micro-bar">
+          <button id="voice-toggle-btn" class="btn-voice-classic" type="button" style="display: none;">
+            <span class="mic-dot"></span>
+            <span id="voice-status-text">voice dictation</span>
           </button>
-          <div id="voice-transcript-log" class="voice-transcript-log" style="display: none;">
-            <span class="transcript-prefix">Heard:</span>
-            <span id="transcript-val" class="transcript-text">—</span>
+          <div id="voice-transcript-log" class="voice-mini-transcript" style="display: none;">
+            <span>Heard:</span>
+            <span id="transcript-val">—</span>
           </div>
         </div>
 
-        <div class="game-footer">
-          <button id="quit-btn" class="btn btn-secondary btn-sm">Quit Session</button>
+        <!-- Bottom quit action -->
+        <div class="game-actions">
+          <button id="quit-btn" class="btn-quit-classic">Quit</button>
         </div>
       </section>
 
-      <!-- PANEL 3: DETAILED ANALYTICS DASHBOARD -->
-      <section id="results-panel" class="card fade-in" style="display: none;">
-        <div class="results-header">
-          <h1>Session Summary</h1>
-          <p class="subtitle">Detailed visual breakdown of your performance.</p>
+      <!-- PANEL 3: SUMMARY & GRAPH DASHBOARD -->
+      <section id="results-panel" class="results-view" style="display: none;">
+
+        <!-- Overall Score banner exactly matching classic -->
+        <div class="results-score-banner">
+          Your score was <span id="summary-score" class="score-emphasis">0</span>.
         </div>
 
-        <div class="summary-cards">
-          <div class="summary-card">
-            <span class="summary-label">Total Solved</span>
-            <span id="summary-score" class="summary-value">48</span>
-          </div>
-          <span class="summary-divider"></span>
-          <div class="summary-card">
-            <span class="summary-label">Solved / Min</span>
-            <span id="summary-ppm" class="summary-value">24.0</span>
-          </div>
-          <span class="summary-divider"></span>
-          <div class="summary-card">
-            <span class="summary-label">Accuracy</span>
-            <span id="summary-accuracy" class="summary-value">98%</span>
-          </div>
+        <!-- Sub-KPI metrics block -->
+        <div class="results-meta-hud">
+          <div class="meta-item">Seconds / Answer: <span id="summary-ppm" class="bold-stat">0.0</span></div>
+          <div class="meta-item">Accuracy: <span id="summary-accuracy" class="bold-stat">100%</span></div>
         </div>
 
-        <div class="analytics-layout">
-          <!-- Left Column: Category Table -->
-          <div class="analytics-column">
-            <h3 class="analytics-section-title">Category Breakdown</h3>
+        <div class="analytics-layout-classic">
+          <!-- Solved table -->
+          <div class="analytics-table-card">
+            <h2 class="sub-title">Category Breakdown</h2>
             <div class="table-container">
-              <table id="analytics-table" class="analytics-table">
+              <table id="analytics-table" class="classic-table">
                 <thead>
                   <tr>
                     <th>Category</th>
                     <th class="text-right">Solved</th>
-                    <th class="text-right">Avg Time Taken</th>
+                    <th class="text-right">Avg Time</th>
                   </tr>
                 </thead>
                 <tbody id="analytics-table-body">
-                  <!-- Programmatically filled -->
+                  <!-- Injected by script -->
                 </tbody>
               </table>
             </div>
           </div>
 
-          <!-- Right Column: Shadcn Style Line Graph -->
-          <div class="analytics-column">
-            <h3 class="analytics-section-title">Speed Consistency (PPM over time)</h3>
-            <div class="graph-card">
-              <!-- Inline Shadcn styled graph container -->
-              <div class="graph-container" id="chart-parent">
-                <!-- SVG Will be dynamically injected here for maximum responsiveness -->
-              </div>
+          <!-- Minimalist Speed Consistency Chart -->
+          <div class="analytics-graph-card">
+            <h2 class="sub-title">Speed Consistency (PPM over time)</h2>
+            <div class="chart-wrapper-classic" id="chart-parent">
+              <!-- SVG injected by JS -->
             </div>
           </div>
         </div>
 
-        <div class="results-footer">
-          <button id="restart-btn" class="btn btn-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-            Play Again
-          </button>
-          <button id="customize-btn" class="btn btn-secondary">Configure Settings</button>
+        <!-- Navigation actions as simple classic links/buttons -->
+        <div class="results-actions">
+          <button id="restart-btn" class="btn-classic-action">Play again</button>
+          <button id="customize-btn" class="btn-classic-action">Configure settings</button>
         </div>
       </section>
     </main>
-
-    <footer class="app-footer">
-      <p>Thetamac Arithmetic speed run. Inspired by Zetamac. 100% Client-side & lightweight.</p>
-    </footer>
   </div>
 
-  <script src="app.js" defer></script>
+  <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
