@@ -104,6 +104,38 @@ body.game-active {
   margin-left: auto;
 }
 
+.header-icon-btn,
+.theme-toggle {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.header-icon-btn:hover,
+.theme-toggle:hover {
+  color: var(--text-primary);
+  background-color: rgba(128, 128, 128, 0.15);
+}
+
+.copy-stats-btn.copied {
+  color: var(--text-primary);
+}
+
+.copy-stats-btn.copied .copy-icon {
+  display: none;
+}
+
+.copy-stats-btn.copied .check-icon {
+  display: block !important;
+}
+
 .text-link-btn {
   background: none;
   border: none;
@@ -323,24 +355,6 @@ body.game-active {
 .bold-stat {
   font-weight: 700;
   font-family: var(--font-mono);
-}
-
-.theme-toggle {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px;
-  border-radius: 4px;
-  transition: color 0.15s ease, background-color 0.15s ease;
-}
-
-.theme-toggle:hover {
-  color: var(--text-primary);
-  background-color: rgba(128, 128, 128, 0.15);
 }
 
 /* Warning timing flashes red */

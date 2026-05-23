@@ -11,6 +11,22 @@ interface CategoryStats {
   avgTime: number;
 }
 
+interface ConsistencyPoint {
+  label: string;
+  solved: number;
+  ppm: number;
+  timeSec: number;
+}
+
+const operationOrder: Operation[] = ['add', 'sub', 'mul', 'div'];
+
+const labelMap: Record<Operation, string> = {
+  add: 'Addition (+)',
+  sub: 'Subtraction (−)',
+  mul: 'Multiplication (×)',
+  div: 'Division (÷)'
+};
+
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (char) => {
     switch (char) {
@@ -28,14 +44,11 @@ function escapeHtml(value: string): string {
   });
 }
 
-/**
- * Aggregates game log results into category-wise statistics and updates the DOM table.
- */
-export function processAnalytics(): void {
-  const log = state.game.log;
-  const duration = state.settings.duration;
+function escapeMarkdownCell(value: string): string {
+  return value.replace(/\|/g, '\\|').replace(/\r?\n/g, ' ');
+}
 
-  // Initialize stats dictionary
+function getCategoryStats(log: LogItem[]): Record<Operation, CategoryStats> {
   const stats: Record<Operation, CategoryStats> = {
     add: { solved: 0, totalTime: 0, avgTime: 0 },
     sub: { solved: 0, totalTime: 0, avgTime: 0 },
@@ -43,23 +56,129 @@ export function processAnalytics(): void {
     div: { solved: 0, totalTime: 0, avgTime: 0 }
   };
 
-  let totalSolved = 0;
-  let mistakeCount = state.game.mistakeCount;
-
-  // Aggregate logs
   for (const item of log) {
     stats[item.category].solved++;
     stats[item.category].totalTime += item.duration;
-    totalSolved++;
   }
 
-  // Calculate averages
-  for (const op of ['add', 'sub', 'mul', 'div'] as Operation[]) {
+  for (const op of operationOrder) {
     const opStat = stats[op];
     if (opStat.solved > 0) {
       opStat.avgTime = opStat.totalTime / opStat.solved;
     }
   }
+
+  return stats;
+}
+
+function getConsistencyData(log: LogItem[], duration: number): ConsistencyPoint[] {
+  let intervalSec = 10;
+  if (duration <= 60) {
+    intervalSec = 5;
+  } else if (duration <= 120) {
+    intervalSec = 10;
+  } else if (duration <= 300) {
+    intervalSec = 20;
+  } else {
+    intervalSec = 60;
+  }
+
+  const numIntervals = Math.ceil(duration / intervalSec);
+  const ppmData: ConsistencyPoint[] = [];
+
+  for (let i = 0; i < numIntervals; i++) {
+    const startSec = i * intervalSec;
+    const endSec = Math.min((i + 1) * intervalSec, duration);
+    const solved = log.filter(item =>
+      item.secondResolved >= startSec && item.secondResolved < endSec
+    ).length;
+    const ppmValue = (solved * 60) / (endSec - startSec);
+
+    ppmData.push({
+      label: `${startSec}s–${endSec}s`,
+      solved,
+      ppm: parseFloat(ppmValue.toFixed(1)),
+      timeSec: endSec
+    });
+  }
+
+  return ppmData;
+}
+
+export function buildStatsMarkdown(): string {
+  const log = state.game.log;
+  const duration = state.settings.duration;
+  const stats = getCategoryStats(log);
+  const totalSolved = log.length;
+  const mistakeCount = state.game.mistakeCount;
+  const totalAttempts = totalSolved + mistakeCount;
+  const secPerAnswer = totalSolved > 0 ? (duration / totalSolved) : 0;
+  const accuracy = totalAttempts > 0 ? Math.round((totalSolved / totalAttempts) * 100) : 100;
+
+  const lines: string[] = [
+    '# Thetamac Results',
+    '',
+    `- Score: ${totalSolved}`,
+    `- Duration: ${duration}s`,
+    `- Seconds / Answer: ${secPerAnswer.toFixed(1)}`,
+    `- Accuracy: ${accuracy}%`,
+    '',
+    '## Category Breakdown',
+    '',
+    '| Category | Solved | Avg Time |',
+    '| --- | ---: | ---: |'
+  ];
+
+  for (const op of operationOrder) {
+    const opStat = stats[op];
+    if (state.settings.operations.includes(op) || opStat.solved > 0) {
+      const avgStr = opStat.solved > 0 ? `${opStat.avgTime.toFixed(2)}s` : '—';
+      lines.push(`| ${labelMap[op]} | ${opStat.solved} | ${avgStr} |`);
+    }
+  }
+
+  lines.push(
+    '',
+    '## Speed Consistency',
+    '',
+    '| Interval | Solved | PPM |',
+    '| --- | ---: | ---: |'
+  );
+
+  for (const point of getConsistencyData(log, duration)) {
+    lines.push(`| ${point.label} | ${point.solved} | ${point.ppm.toFixed(1)} |`);
+  }
+
+  lines.push(
+    '',
+    '## Problem Log',
+    '',
+    '| # | Problem | Accurate? | Time |',
+    '| ---: | --- | ---: | ---: |'
+  );
+
+  if (log.length === 0) {
+    lines.push('| — | No problems solved during this run. | — | — |');
+  } else {
+    log.forEach((item, index) => {
+      const problem = escapeMarkdownCell(`${item.problem} = ${item.answer}`);
+      const accurate = item.hadMistake ? 'No' : 'Yes';
+      lines.push(`| ${index + 1} | ${problem} | ${accurate} | ${item.duration.toFixed(2)}s |`);
+    });
+  }
+
+  return `${lines.join('\n')}\n`;
+}
+
+/**
+ * Aggregates game log results into category-wise statistics and updates the DOM table.
+ */
+export function processAnalytics(): void {
+  const log = state.game.log;
+  const duration = state.settings.duration;
+  const stats = getCategoryStats(log);
+  const totalSolved = log.length;
+  const mistakeCount = state.game.mistakeCount;
 
   // Update Overview Cards
   const scoreEl = document.getElementById('summary-score');
@@ -84,15 +203,8 @@ export function processAnalytics(): void {
   if (tableBody) {
     tableBody.innerHTML = '';
 
-    const labelMap: Record<Operation, string> = {
-      add: 'Addition (+)',
-      sub: 'Subtraction (−)',
-      mul: 'Multiplication (×)',
-      div: 'Division (÷)'
-    };
-
     let rowsHtml = '';
-    for (const op of ['add', 'sub', 'mul', 'div'] as Operation[]) {
+    for (const op of operationOrder) {
       const opStat = stats[op];
       // Only render categories that were active or solved
       if (state.settings.operations.includes(op) || opStat.solved > 0) {
@@ -152,42 +264,8 @@ function renderConsistencyChart(log: LogItem[], duration: number): void {
 
   // Clear container
   chartParent.innerHTML = '';
-
-  // Determine interval duration (seconds) dynamically to keep data points between 6 and 30
-  let intervalSec = 10;
-  if (duration <= 30) {
-    intervalSec = 5;
-  } else if (duration <= 60) {
-    intervalSec = 5;
-  } else if (duration <= 120) {
-    intervalSec = 10;
-  } else if (duration <= 300) {
-    intervalSec = 20;
-  } else {
-    intervalSec = 60;
-  }
-
-  const numIntervals = Math.ceil(duration / intervalSec);
-  const ppmData: { label: string; ppm: number; timeSec: number }[] = [];
-
-  // Group logged answers into intervals and compute PPM
-  for (let i = 0; i < numIntervals; i++) {
-    const startSec = i * intervalSec;
-    const endSec = (i + 1) * intervalSec;
-    
-    // Count problems solved in this exact block
-    const countInInterval = log.filter(item => 
-      item.secondResolved >= startSec && item.secondResolved < endSec
-    ).length;
-
-    // Convert count to a Problems-Per-Minute rate
-    const ppmValue = (countInInterval * 60) / intervalSec;
-    ppmData.push({
-      label: `${startSec}s–${endSec}s`,
-      ppm: parseFloat(ppmValue.toFixed(1)),
-      timeSec: endSec
-    });
-  }
+  const ppmData = getConsistencyData(log, duration);
+  const numIntervals = ppmData.length;
 
   // Setup dimensions
   const width = 600;

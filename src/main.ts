@@ -7,7 +7,7 @@ import { inject } from '@vercel/analytics';
 import { state, resetGameState } from './state';
 import { generateQuestion } from './engine';
 import { initVoiceMode, isVoiceModeSupported, startListening, stopListening, updateVoiceUI } from './voice';
-import { processAnalytics } from './analytics';
+import { buildStatsMarkdown, processAnalytics } from './analytics';
 import type { Operation } from './types';
 
 inject({ framework: 'vite' });
@@ -24,6 +24,7 @@ let scoreVal: HTMLElement;
 let themeToggles: NodeListOf<HTMLButtonElement>;
 let headerHud: HTMLElement;
 let voiceToggleBtn: HTMLButtonElement;
+let copyStatsBtn: HTMLButtonElement;
 let quitBtn: HTMLButtonElement;
 let restartBtn: HTMLButtonElement;
 let customizeBtn: HTMLButtonElement;
@@ -31,6 +32,7 @@ let gameDurationSelect: HTMLSelectElement;
 let startVoiceBtn: HTMLButtonElement;
 
 let gameTimerId: number | null = null;
+let copyStatsResetTimerId: number | null = null;
 
 /**
  * Main application initialization.
@@ -61,6 +63,7 @@ function cacheDOM(): void {
   themeToggles = document.querySelectorAll('.theme-toggle');
   headerHud = document.getElementById('header-hud')!;
   voiceToggleBtn = document.getElementById('voice-toggle-btn') as HTMLButtonElement;
+  copyStatsBtn = document.getElementById('copy-stats-btn') as HTMLButtonElement;
   quitBtn = document.getElementById('quit-btn') as HTMLButtonElement;
   restartBtn = document.getElementById('restart-btn') as HTMLButtonElement;
   customizeBtn = document.getElementById('customize-btn') as HTMLButtonElement;
@@ -95,6 +98,7 @@ function loadPersistedPreferences(): void {
 function bindEventHandlers(): void {
   // Header buttons
   themeToggles.forEach(btn => btn.addEventListener('click', toggleTheme));
+  copyStatsBtn.addEventListener('click', handleCopyStatsClick);
 
   // Form check/uncheck dynamic visual greyscaling
   const opAddCheck = document.getElementById('op-add') as HTMLInputElement;
@@ -318,6 +322,8 @@ function startSession(): void {
   resultsPanel.style.display = 'none';
   gamePanel.style.display = 'flex';
   headerHud.style.display = 'flex';
+  copyStatsBtn.style.display = 'none';
+  resetCopyStatsButton();
   document.body.classList.add('game-active');
   if (state.voice.enabled) {
     document.body.classList.add('voice-mode-active');
@@ -464,6 +470,7 @@ function terminateSession(): void {
 
   // Trigger metrics compiling and charting
   processAnalytics();
+  copyStatsBtn.style.display = 'flex';
 }
 
 /**
@@ -485,6 +492,8 @@ function showSettingsView(): void {
   gamePanel.style.display = 'none';
   settingsPanel.style.display = 'flex';
   headerHud.style.display = 'none';
+  copyStatsBtn.style.display = 'none';
+  resetCopyStatsButton();
 }
 
 /**
@@ -510,4 +519,75 @@ function updateThemeIcons(isLight: boolean): void {
       moon.style.display = 'none';
     }
   });
+}
+
+async function handleCopyStatsClick(): Promise<void> {
+  try {
+    await copyText(buildStatsMarkdown());
+    showCopyStatsSuccess();
+  } catch (err) {
+    console.warn('Failed to copy stats markdown:', err);
+    alert('Unable to copy stats. Please try again.');
+  }
+}
+
+async function copyText(text: string): Promise<void> {
+  if (navigator.clipboard?.writeText) {
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const timeoutId = window.setTimeout(() => {
+          reject(new Error('Clipboard write timed out.'));
+        }, 750);
+
+        navigator.clipboard.writeText(text).then(() => {
+          clearTimeout(timeoutId);
+          resolve();
+        }).catch((err) => {
+          clearTimeout(timeoutId);
+          reject(err);
+        });
+      });
+      return;
+    } catch {
+      // Fall through to the textarea copy path for browsers with unreliable Clipboard API behavior.
+    }
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.left = '-9999px';
+  document.body.appendChild(textarea);
+  textarea.select();
+
+  const copied = document.execCommand('copy');
+  document.body.removeChild(textarea);
+
+  if (!copied) {
+    throw new Error('Copy command was rejected.');
+  }
+}
+
+function showCopyStatsSuccess(): void {
+  copyStatsBtn.classList.add('copied');
+  copyStatsBtn.setAttribute('aria-label', 'Stats copied');
+  copyStatsBtn.title = 'Stats copied';
+
+  if (copyStatsResetTimerId !== null) {
+    clearTimeout(copyStatsResetTimerId);
+  }
+
+  copyStatsResetTimerId = window.setTimeout(resetCopyStatsButton, 1500);
+}
+
+function resetCopyStatsButton(): void {
+  copyStatsBtn.classList.remove('copied');
+  copyStatsBtn.setAttribute('aria-label', 'Copy stats as Markdown');
+  copyStatsBtn.title = 'Copy stats as Markdown';
+
+  if (copyStatsResetTimerId !== null) {
+    clearTimeout(copyStatsResetTimerId);
+    copyStatsResetTimerId = null;
+  }
 }
