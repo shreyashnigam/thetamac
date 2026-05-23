@@ -33,7 +33,7 @@
         <h1 class="game-title">Arithmetic Game</h1>
         
         <p class="game-intro">
-          The Arithmetic Game is a fast-paced speed drill where you solve many arithmetic problems as you can in a set amount of time.
+          The Arithmetic Game is a fast-paced speed drill where you solve as many arithmetic problems as you can in a set amount of time.
         </p>
 
         <form id="settings-form" class="settings-form">
@@ -209,6 +209,25 @@
             <div class="chart-wrapper-classic" id="chart-parent">
               <!-- SVG injected by JS -->
             </div>
+          </div>
+        </div>
+
+        <div class="problem-log-section">
+          <h2 class="sub-title">Problem Log</h2>
+          <div class="problem-log-wrapper">
+            <table id="problem-log-table" class="classic-table problem-log-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Problem</th>
+                  <th class="text-right">Accurate?</th>
+                  <th class="text-right">Time</th>
+                </tr>
+              </thead>
+              <tbody id="problem-log-table-body">
+                <!-- Injected by script -->
+              </tbody>
+            </table>
           </div>
         </div>
 

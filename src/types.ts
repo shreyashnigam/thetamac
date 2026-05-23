@@ -32,6 +32,8 @@ export interface Question {
 
 export interface LogItem {
   category: Operation;
+  problem: string;
+  answer: number;
   duration: number; // Time spent on this exact question in seconds
   hadMistake: boolean; // Did the user type any wrong key while resolving this
   secondResolved: number; // At what point in the game timeline was it solved (seconds elapsed)

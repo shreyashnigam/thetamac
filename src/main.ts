@@ -418,6 +418,8 @@ function handleCorrectAnswer(): void {
   // Log to centralized analytic memory
   state.game.log.push({
     category: currentQuestion.category,
+    problem: currentQuestion.text,
+    answer: currentQuestion.answer,
     duration: parseFloat(secTaken.toFixed(3)),
     hadMistake: state.game.questionHadMistake,
     secondResolved

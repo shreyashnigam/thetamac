@@ -552,6 +552,49 @@ body.voice-mode-active .problem-text {
   color: var(--text-secondary);
 }
 
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+.font-medium {
+  font-weight: 600;
+}
+
+.text-muted {
+  color: var(--text-muted) !important;
+}
+
+.problem-log-section {
+  width: 100%;
+}
+
+.problem-log-wrapper {
+  width: 100%;
+  max-height: 320px;
+  overflow: auto;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.problem-log-table th {
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 1;
+}
+
+.problem-log-equation {
+  font-family: var(--font-mono);
+}
+
 /* Graph container styling */
 .chart-wrapper-classic {
   width: 100%;
@@ -698,4 +741,3 @@ input[type=number] {
     gap: 24px;
   }
 }
-

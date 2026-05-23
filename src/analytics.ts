@@ -11,6 +11,23 @@ interface CategoryStats {
   avgTime: number;
 }
 
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (char) => {
+    switch (char) {
+      case '&':
+        return '&amp;';
+      case '<':
+        return '&lt;';
+      case '>':
+        return '&gt;';
+      case '"':
+        return '&quot;';
+      default:
+        return '&#39;';
+    }
+  });
+}
+
 /**
  * Aggregates game log results into category-wise statistics and updates the DOM table.
  */
@@ -96,8 +113,34 @@ export function processAnalytics(): void {
     tableBody.innerHTML = rowsHtml;
   }
 
+  renderProblemLog(log);
+
   // Draw chart
   renderConsistencyChart(log, duration);
+}
+
+function renderProblemLog(log: LogItem[]): void {
+  const tableBody = document.getElementById('problem-log-table-body');
+  if (!tableBody) return;
+
+  if (log.length === 0) {
+    tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No problems solved during this run.</td></tr>';
+    return;
+  }
+
+  tableBody.innerHTML = log.map((item, index) => {
+    const problem = `${item.problem} = ${item.answer}`;
+    const accurate = item.hadMistake ? 'No' : 'Yes';
+
+    return `
+      <tr>
+        <td class="font-mono">${index + 1}</td>
+        <td class="problem-log-equation">${escapeHtml(problem)}</td>
+        <td class="text-right">${accurate}</td>
+        <td class="text-right font-mono">${item.duration.toFixed(2)}s</td>
+      </tr>
+    `;
+  }).join('');
 }
 
 /**
